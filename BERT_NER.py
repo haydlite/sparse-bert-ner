@@ -13,6 +13,7 @@ from __future__ import print_function
 import collections
 import os
 import pickle
+import time
 from absl import flags,logging
 from bert import modeling
 from bert import optimization
@@ -53,7 +54,7 @@ flags.DEFINE_string(
 # if we used in bio-medical field，don't do lower case would be better!
 
 flags.DEFINE_bool(
-    "do_lower_case", True,
+    "do_lower_case", False,
     "Whether to lower case the input text. Should be True for uncased "
     "models and False for cased models.")
 
@@ -460,7 +461,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
         label_ids = features["label_ids"]
         is_training = (mode == tf.estimator.ModeKeys.TRAIN)
         if FLAGS.crf:
-            (total_loss, logits,predicts) = create_model(bert_config, is_training, input_ids,
+            (total_loss, logits, predicts) = create_model(bert_config, is_training, input_ids,
                                                             mask, segment_ids, label_ids,num_labels, 
                                                             use_one_hot_embeddings)
 
@@ -480,8 +481,8 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
                     return tf.train.Scaffold()
                 scaffold_fn = tpu_scaffold
             else:
-
                 tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
+
         logging.info("**** Trainable Variables ****")
         for var in tvars:
             init_string = ""
@@ -489,8 +490,6 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
                 init_string = ", *INIT_FROM_CKPT*"
             logging.info("  name = %s, shape = %s%s", var.name, var.shape,
                             init_string)
-
-        
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             train_op = optimization.create_optimizer(total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu)
@@ -549,8 +548,8 @@ def Writer(output_predict_file,result,batch_tokens,batch_labels,id2label):
                 _write_base(batch_tokens,id2label,prediction,batch_labels,wf,i)
             
 
-
 def main(_):
+    logging.get_absl_handler().use_absl_log_file('log.txt', FLAGS.output_dir)
     logging.set_verbosity(logging.INFO)
     processors = {"ner": NerProcessor}
     if not FLAGS.do_train and not FLAGS.do_eval:
@@ -594,6 +593,7 @@ def main(_):
         num_train_steps = int(
             len(train_examples) / FLAGS.train_batch_size * FLAGS.num_train_epochs)
         num_warmup_steps = int(num_train_steps * FLAGS.warmup_proportion)
+
     model_fn = model_fn_builder(
         bert_config=bert_config,
         num_labels=len(label_list),
@@ -603,6 +603,7 @@ def main(_):
         num_warmup_steps=num_warmup_steps,
         use_tpu=FLAGS.use_tpu,
         use_one_hot_embeddings=FLAGS.use_tpu)
+
     estimator = tf.contrib.tpu.TPUEstimator(
         use_tpu=FLAGS.use_tpu,
         model_fn=model_fn,
@@ -625,7 +626,10 @@ def main(_):
             seq_length=FLAGS.max_seq_length,
             is_training=True,
             drop_remainder=True)
+        start_time = time.time()
         estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
+        logging.info("--- %s seconds ---", (time.time() - start_time))
+
     if FLAGS.do_eval:
         eval_examples = processor.get_dev_examples(FLAGS.data_dir)
         eval_file = os.path.join(FLAGS.output_dir, "eval.tf_record")

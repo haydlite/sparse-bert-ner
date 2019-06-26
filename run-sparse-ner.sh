@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-  python BERT_NER.py\
+  python BERT-NER-Sparse.py\
     --task_name="NER"  \
     --do_lower_case=False \
     --crf=True \
@@ -15,7 +15,7 @@
     --train_batch_size=32   \
     --learning_rate=2e-5   \
     --num_train_epochs=4.0   \
-    --output_dir=./output/results_baseline
+    --output_dir=./output/results_sparse
 
 
 perl conlleval.pl -d '\t' < ./output/result_dir/label_test.txt
