@@ -18,4 +18,4 @@
     --output_dir=./output/results_baseline
 
 
-perl conlleval.pl -d '\t' < ./output/result_dir/label_test.txt
+perl conlleval.pl -d '\t' < ./output/results_baseline/label_test.txt

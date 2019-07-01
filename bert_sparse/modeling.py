@@ -685,6 +685,8 @@ def attention_layer(from_tensor,
           if ndims > 2:
               y = tf.reshape(y, y_shape)
 
+
+
           return y
 
   # Scalar dimensions referenced here:
@@ -697,41 +699,41 @@ def attention_layer(from_tensor,
   from_tensor_2d = reshape_to_matrix(from_tensor)
   to_tensor_2d = reshape_to_matrix(to_tensor)
 
-  query_layer = conv1d(from_tensor_2d,
-                       "query",
-                       num_attention_heads * size_per_head)
+  # query_layer = conv1d(from_tensor_2d,
+  #                      "query",
+  #                      num_attention_heads * size_per_head)
 
-  key_layer = conv1d(to_tensor_2d,
-                     "key",
-                     num_attention_heads * size_per_head)
-
-  value_layer = conv1d(to_tensor_2d,
-                       "value",
-                       num_attention_heads * size_per_head)
+  # key_layer = conv1d(to_tensor_2d,
+  #                    "key",
+  #                    num_attention_heads * size_per_head)
+  #
+  # value_layer = conv1d(to_tensor_2d,
+  #                      "value",
+  #                      num_attention_heads * size_per_head)
 
   # `query_layer` = [B*F, N*H]
-  # query_layer = tf.layers.dense(
-  #     from_tensor_2d,
-  #     num_attention_heads * size_per_head,
-  #     activation=query_act,
-  #     name="query",
-  #     kernel_initializer=create_initializer(initializer_range))
+  query_layer = tf.layers.dense(
+      from_tensor_2d,
+      num_attention_heads * size_per_head,
+      activation=query_act,
+      name="query",
+      kernel_initializer=create_initializer(initializer_range))
 
   # `key_layer` = [B*T, N*H]
-  # key_layer = tf.layers.dense(
-  #     to_tensor_2d,
-  #     num_attention_heads * size_per_head,
-  #     activation=key_act,
-  #     name="key",
-  #     kernel_initializer=create_initializer(initializer_range))
+  key_layer = tf.layers.dense(
+      to_tensor_2d,
+      num_attention_heads * size_per_head,
+      activation=key_act,
+      name="key",
+      kernel_initializer=create_initializer(initializer_range))
 
   # `value_layer` = [B*T, N*H]
-  # value_layer = tf.layers.dense(
-  #     to_tensor_2d,
-  #     num_attention_heads * size_per_head,
-  #     activation=value_act,
-  #     name="value",
-  #     kernel_initializer=create_initializer(initializer_range))
+  value_layer = tf.layers.dense(
+      to_tensor_2d,
+      num_attention_heads * size_per_head,
+      activation=value_act,
+      name="value",
+      kernel_initializer=create_initializer(initializer_range))
 
   # `query_layer` = [B, N, F, H]
   query_layer = transpose_for_scores(query_layer, batch_size,

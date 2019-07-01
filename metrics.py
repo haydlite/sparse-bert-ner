@@ -5,6 +5,7 @@
 # Copyright 2019 The BioNLP-HZAU Kaiyin Zhou
 # Time:2019/04/08
 """
+import tensorflow as tf
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
@@ -13,6 +14,8 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import variable_scope
 import numpy as np
+import os
+
 
 def metric_variable(shape, dtype, validate_shape=True, name=None):
     """Create variable in `GraphKeys.(LOCAL|METRIC_VARIABLES)` collections.
@@ -54,7 +57,7 @@ def metric_variable(shape, dtype, validate_shape=True, name=None):
         aggregation=variable_scope.VariableAggregation.SUM,
         name=name)
 
-def streaming_confusion_matrix(labels, predictions, num_classes, weights=None):
+def streaming_confusion_matrix(labels, predictions, num_classes, weights=None, output_dir="./output/results_no_train"):
     """Calculate a streaming confusion matrix.
     Calculates a confusion matrix. For estimation over a stream of data,
     the function creates an  `update_op` operation.
@@ -82,6 +85,13 @@ def streaming_confusion_matrix(labels, predictions, num_classes, weights=None):
     predictions = math_ops.to_int64(predictions)
     labels = math_ops.to_int64(labels)
     num_classes = math_ops.to_int64(num_classes)
+
+    debug_file = os.path.join(output_dir, "debugging.txt")
+    with open(debug_file, "a+") as wf:
+        wf.write("\n\n***** Debugging *****\n\n")
+        wf.write("Predictions: {} \n".format(predictions))
+        wf.write("Labels: {} \n".format(labels))
+        wf.write("Num of Classes: {} \n".format(num_classes))
 
     # Flatten the input if its rank > 1.
     if predictions.get_shape().ndims > 1:

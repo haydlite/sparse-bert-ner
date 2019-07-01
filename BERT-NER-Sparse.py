@@ -677,14 +677,14 @@ def main(_):
         result = estimator.evaluate(input_fn=eval_input_fn)
         output_eval_file = os.path.join(FLAGS.output_dir, "eval_results.txt")
         with open(output_eval_file, "w") as wf:
-            logging.info("***** Eval results *****")
+            wf.write("***** Eval results *****\n")
             confusion_matrix = result["confusion_matrix"]
             p, r, f = metrics.calculate(confusion_matrix, len(label_list) - 1)
-            logging.info("***********************************************")
-            logging.info("********************P = %s*********************", str(p))
-            logging.info("********************R = %s*********************", str(r))
-            logging.info("********************F = %s*********************", str(f))
-            logging.info("***********************************************")
+            wf.write("***********************************************\n")
+            wf.write("********************P = {}*********************\n".format(str(p)))
+            wf.write("********************R = {}*********************\n".format(str(r)))
+            wf.write("********************F = {}*********************\n".format(str(f)))
+            wf.write("***********************************************\n")
 
     if FLAGS.do_predict:
         with open(FLAGS.middle_output + '/label2id.pkl', 'rb') as rf:

@@ -21,6 +21,7 @@ from bert import tokenization
 import tensorflow as tf
 import metrics
 import numpy as np
+
 FLAGS = flags.FLAGS
 
 ## Required parameters
@@ -502,9 +503,10 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
         elif mode == tf.estimator.ModeKeys.EVAL:
             def metric_fn(label_ids, logits,num_labels,mask):
                 predictions = tf.math.argmax(logits, axis=-1, output_type=tf.int32)
-                cm = metrics.streaming_confusion_matrix(label_ids, predictions, num_labels-1, weights=mask)
+                cm = metrics.streaming_confusion_matrix(label_ids, predictions, num_labels-1,
+                                                        weights=mask, output_dir=FLAGS.output_dir)
                 return {
-                    "confusion_matrix":cm
+                    "confusion_matrix": cm
                 }
                 #
             eval_metrics = (metric_fn, [label_ids, logits, num_labels, mask])
@@ -649,15 +651,15 @@ def main(_):
             drop_remainder=False)
         result = estimator.evaluate(input_fn=eval_input_fn)
         output_eval_file = os.path.join(FLAGS.output_dir, "eval_results.txt")
-        with open(output_eval_file,"w") as wf:
-            logging.info("***** Eval results *****")
+        with open(output_eval_file, "a+") as wf:
+            wf.write("***** Eval results *****\n")
             confusion_matrix = result["confusion_matrix"]
-            p,r,f = metrics.calculate(confusion_matrix,len(label_list)-1)
-            logging.info("***********************************************")
-            logging.info("********************P = %s*********************",  str(p))
-            logging.info("********************R = %s*********************",  str(r))
-            logging.info("********************F = %s*********************",  str(f))
-            logging.info("***********************************************")
+            p, r, f = metrics.calculate(confusion_matrix, len(label_list) - 1)
+            wf.write("***********************************************\n")
+            wf.write("********************P = {}*********************\n".format(str(p)))
+            wf.write("********************R = {}*********************\n".format(str(r)))
+            wf.write("********************F = {}*********************\n".format(str(f)))
+            wf.write("***********************************************\n")
 
 
     if FLAGS.do_predict:
